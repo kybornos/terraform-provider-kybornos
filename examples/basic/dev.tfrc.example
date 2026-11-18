@@ -1,0 +1,6 @@
+provider_installation {
+  dev_overrides {
+    "registry.opentofu.org/kybornos/kybornos" = "/ABSOLUTE/PATH/TO/terraform-provider-kybornos/bin"
+  }
+  direct {}
+}
