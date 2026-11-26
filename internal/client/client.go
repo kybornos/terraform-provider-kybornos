@@ -18,11 +18,46 @@ type Client struct {
 	Token   string
 	HTTP    *http.Client
 }
+
 type VM struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Size string `json:"size"`
+	ID         string `json:"id"`
+	Hostname   string
+	VMName     string `json:"vm_name"`
+	Size       VMSize `json:"size"`
+	Public     bool
+	Interfaces []VMInterface
 }
+
+type VMSize struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	CPU    int64  `json:"cpu"`
+	Memory int64  `json:"memory"`
+	Disk   int64  `json:"disk"`
+}
+
+type VMInterface struct {
+	IP4     string `json:"ip4"`
+	LLAddr  string `json:"lladdr"`
+	Primary bool   `json:"primary"`
+	Public  bool   `json:"public"`
+}
+
+type VMResponse struct {
+	Status string `json:"status"`
+	Data   struct {
+		ID       string `json:"id"`
+		Hostname string `json:"hostname"`
+		VMName   string `json:"vm_name"`
+		State    string `json:"state"`
+		Data     struct {
+			Size       VMSize        `json:"size"`
+			Public     bool          `json:"public"`
+			Interfaces []VMInterface `json:"interfaces"`
+		} `json:"data"`
+	} `json:"data"`
+}
+
 type Error struct {
 	Status  int
 	Message string
@@ -100,11 +135,12 @@ func (c *Client) request(ctx context.Context, method, path string, payload any, 
 	}
 	return nil
 }
-func (c *Client) Create(ctx context.Context, name, size string) (VM, error) {
+func (c *Client) Create(ctx context.Context, hostname, size string, public bool) (VM, error) {
 	var result DeployResponse
-	if err := c.request(ctx, http.MethodPost, "/v1/vms/deploy", map[string]string{
-		"name": name,
-		"size": size,
+	if err := c.request(ctx, http.MethodPost, "/v1/vms/deploy", map[string]any{
+		"name":   hostname,
+		"size":   size,
+		"public": public,
 	}, &result); err != nil {
 		return VM{}, err
 	}
@@ -114,34 +150,30 @@ func (c *Client) Create(ctx context.Context, name, size string) (VM, error) {
 	if result.Data == "" {
 		return VM{}, errors.New("deploy response missing VM ID in data")
 	}
-	return VM{ID: result.Data, Name: name, Size: size}, nil
+	return VM{ID: result.Data}, nil
 }
 
 func (c *Client) Get(ctx context.Context, id string) (VM, error) {
-	// The exact GET response shape is not yet confirmed. Accept either a
-	// direct VM object or an {"status":"ok","data":{...}} envelope.
-	var result struct {
-		ID     string          `json:"id"`
-		Name   string          `json:"name"`
-		Size   string          `json:"size"`
-		Status string          `json:"status"`
-		Data   json.RawMessage `json:"data"`
-	}
+	var result VMResponse
 	if err := c.request(ctx, http.MethodGet, "/v1/vms/"+url.PathEscape(id), nil, &result); err != nil {
 		return VM{}, err
 	}
-	vm := VM{ID: result.ID, Name: result.Name, Size: result.Size}
-	if len(result.Data) != 0 && string(result.Data) != "null" {
-		if result.Status != "" && result.Status != "ok" {
-			return VM{}, fmt.Errorf("get VM returned unexpected status %q", result.Status)
-		}
-		if err := json.Unmarshal(result.Data, &vm); err != nil {
-			return VM{}, fmt.Errorf("decode VM data: %w", err)
-		}
+	vm := VM{
+		ID:         result.Data.ID,
+		Hostname:   result.Data.Hostname,
+		VMName:     result.Data.VMName,
+		Size:       result.Data.Data.Size,
+		Public:     result.Data.Data.Public,
+		Interfaces: result.Data.Data.Interfaces,
 	}
 	if vm.ID == "" {
-		vm.ID = id
+		return VM{}, fmt.Errorf("VM response missing ID")
 	}
+
+	if vm.Size.Name == "" {
+		return VM{}, fmt.Errorf("VM response missing size")
+	}
+
 	return vm, nil
 }
 
