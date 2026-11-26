@@ -1,2 +1,3 @@
 bin/terraform-provider-kybornos
 *.tfstate
+*.tfstate.backup

@@ -12,10 +12,16 @@ provider "kybornos" {
 }
 
 resource "kybornos_vm" "web" {
-  name = "web01"
+  count = 1
+  hostname = "web${count.index}"
   size = "small"
+  public = false
 }
 
-output "vm_id" {
-  value = kybornos_vm.web.id
+output "vm_ids" {
+  value = kybornos_vm.web[*].id
+}
+
+output "ip_addresses" {
+    value = kybornos_vm.web[*].interfaces[*].ip4
 }
