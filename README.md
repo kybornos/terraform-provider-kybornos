@@ -36,7 +36,44 @@ Skip `tofu init` as the provider is not published yet.
 tofu import kybornos_vm.web '<vm-id>'
 ```
 
+## Example TF state
+
+```sh
+$ tofu show
+# kybornos_vm.web[0]:
+resource "kybornos_vm" "web" {
+    cpu        = 1
+    disk       = 20480
+    hostname   = "web0"
+    id         = "01a2172d-456d-7d65-b54e-50f3188f537f"
+    interfaces = [
+        {
+            ip4     = "10.0.11.13"
+            lladdr  = "4e:2a:4b:05:94:ac"
+            primary = true
+            public  = false
+        },
+    ]
+    memory     = 1024
+    public     = false
+    size       = "small"
+    vm_name    = "A0424BE62857.web0"
+}
+
+
+Outputs:
+
+ip_addresses = [
+    [
+        "10.0.11.13",
+    ],
+]
+vm_ids = [
+    "01a2172d-456d-7d65-b54e-50f3188f537f",
+]
+```
+
 ## Notes
 
-- `name` and `size` changes cause VM replacement, not in-place update.
+- `hostname` and `size` changes cause VM replacement, not in-place update.
 - HTTP timeouts are 30 seconds.

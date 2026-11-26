@@ -1,0 +1,15 @@
+---
+title: "Kybornos Provider"
+description: |-
+{{ .Description | plainmarkdown | trimspace | prefixlines "  " }}
+---
+
+{{ .Description | trimspace }}
+
+{{ if .HasExample -}}
+## Example Usage
+
+{{ tffile .ExampleFile }}
+{{ end -}}
+
+{{ .SchemaMarkdown | trimspace }}
