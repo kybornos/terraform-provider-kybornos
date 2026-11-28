@@ -26,10 +26,22 @@ func (p *KybornosProvider) Metadata(_ context.Context, _ provider.MetadataReques
 	resp.Version = p.version
 }
 func (p *KybornosProvider) Schema(_ context.Context, _ provider.SchemaRequest, resp *provider.SchemaResponse) {
-	resp.Schema = schema.Schema{Description: "Manage Kybornos infrastructure.", Attributes: map[string]schema.Attribute{
-		"endpoint": schema.StringAttribute{Optional: true, Description: "Gateway base URL; override with KYBORNOS_ENDPOINT."},
-		"api_key":  schema.StringAttribute{Optional: true, Sensitive: true, Description: "Gateway API key; set KYBORNOS_API_KEY."},
-	}}
+	resp.Schema = schema.Schema{
+		MarkdownDescription: "Terraform provider for Kybornos VDC infrastructure.",
+		Attributes: map[string]schema.Attribute{
+			"endpoint": schema.StringAttribute{
+				Optional: true,
+				MarkdownDescription: "Kybornos Gateway API base URL. " +
+					"Can also be set using the `KYBORNOS_ENDPOINT` environment variable.",
+			},
+			"api_key": schema.StringAttribute{
+				Optional:  true,
+				Sensitive: true,
+				MarkdownDescription: "Kybornos Gateway API key. " +
+					"Can also be set using the `KYBORNOS_API_KEY` environment variable.",
+			},
+		},
+	}
 }
 func (p *KybornosProvider) Configure(ctx context.Context, req provider.ConfigureRequest, resp *provider.ConfigureResponse) {
 	var m providerModel

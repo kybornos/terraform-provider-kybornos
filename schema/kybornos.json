@@ -1,0 +1,243 @@
+{
+  "format_version": "1.0",
+  "provider_schemas": {
+    "kybornos": {
+      "provider": {
+        "version": 0,
+        "block": {
+          "attributes": {
+            "api_key": {
+              "type": "string",
+              "description": "Kybornos Gateway API key. Can also be set using the `KYBORNOS_API_KEY` environment variable.",
+              "description_kind": "markdown",
+              "optional": true,
+              "sensitive": true
+            },
+            "endpoint": {
+              "type": "string",
+              "description": "Kybornos Gateway API base URL. Can also be set using the `KYBORNOS_ENDPOINT` environment variable.",
+              "description_kind": "markdown",
+              "optional": true
+            }
+          },
+          "description": "Terraform provider for Kybornos VDC infrastructure.",
+          "description_kind": "markdown"
+        }
+      },
+      "resource_schemas": {
+        "kybornos_vm": {
+          "version": 0,
+          "block": {
+            "attributes": {
+              "autodisk_template": {
+                "type": "bool",
+                "description": "Autodisk template to use for disk paritioning. Currenlty only `small_disk` and `false` are supported. The small_disk template is optimized for smaller disks by merging some OpenBSD partitions and maximizing available space in /home. Defaults to template name configured in the machine size package. If set to `false` the stock installer defaults are applied.",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "autoinstall": {
+                "nested_type": {
+                  "attributes": {
+                    "http_server": {
+                      "type": "string",
+                      "description": "HTTP server to use for downloading install sets.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "server_directory": {
+                      "type": "string",
+                      "description": "HTTP server directory containing installation sets. Defaults to: `pub/OpenBSD/${RELEASE}/amd64` where the default `${RELEASE}` is configured system wide  by the Kybornos operator.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "sets": {
+                      "type": "string",
+                      "description": "Sets to download for autoinstall. Defaults to: `-x* -game* -comp*`",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "timezone": {
+                      "type": "string",
+                      "description": "System timezone. Defaults to `UTC` if omitted. Changes do not affect existing VMs.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "username": {
+                      "type": "string",
+                      "description": "Extra user to setup. Password is disabled by default and the Kybornos account wide SSH key is populated in the user's authorized_keys file. Defaults to no user.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    }
+                  },
+                  "nesting_mode": "single"
+                },
+                "description": "OpenBSD's autoinstall configuration.",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "cpu": {
+                "type": "number",
+                "description": "Number of CPU cores allocated to the VM.",
+                "description_kind": "markdown",
+                "computed": true
+              },
+              "disk": {
+                "type": "number",
+                "description": "Disk size in MB allocated to the VM.",
+                "description_kind": "markdown",
+                "computed": true
+              },
+              "encrypt": {
+                "type": "string",
+                "description": "Initial passphrase for full disk encryption. This should be changed after deployment inside the VM with `bioctl -P`. Please note: the passphrase must be entered manually on the VM's console every time the VM is started or rebooted or the VM will not boot. Lost passphrase means lost data.",
+                "description_kind": "markdown",
+                "optional": true,
+                "sensitive": true
+              },
+              "hostname": {
+                "type": "string",
+                "description": "Hostname of the virtual machine.",
+                "description_kind": "plain",
+                "required": true
+              },
+              "id": {
+                "type": "string",
+                "description": "Stable VM identifier.",
+                "description_kind": "plain",
+                "computed": true
+              },
+              "interfaces": {
+                "nested_type": {
+                  "attributes": {
+                    "ip4": {
+                      "type": "string",
+                      "description": "IPv4 address allocated to the interface. Note: IPv6 allocation is not tracked in metadata as that is auto allocated outside DHCP.",
+                      "description_kind": "markdown",
+                      "computed": true
+                    },
+                    "lladdr": {
+                      "type": "string",
+                      "description": "MAC address allocated to the interface.",
+                      "description_kind": "markdown",
+                      "computed": true
+                    },
+                    "primary": {
+                      "type": "bool",
+                      "description": "If true, the interface is used for default gateway.",
+                      "description_kind": "markdown",
+                      "computed": true
+                    },
+                    "public": {
+                      "type": "bool",
+                      "description": "If true, the interface is directly attached to the Internet.",
+                      "description_kind": "markdown",
+                      "computed": true
+                    }
+                  },
+                  "nesting_mode": "list"
+                },
+                "description": "Network interfaces allocated by Kybornos.",
+                "description_kind": "markdown",
+                "computed": true
+              },
+              "memory": {
+                "type": "number",
+                "description": "Memory (RAM) in MB allocated to the VM.",
+                "description_kind": "markdown",
+                "computed": true
+              },
+              "public": {
+                "type": "bool",
+                "description": "Allocate public IP and network access. Defaults to `false`. Changing this value requires VM replacement.",
+                "description_kind": "markdown",
+                "optional": true,
+                "computed": true
+              },
+              "size": {
+                "type": "string",
+                "description": "VM size package name. Example: `small`, `medium`, `large`. VM size package limits are managed by the Kybornos operator.",
+                "description_kind": "markdown",
+                "required": true
+              },
+              "srv_tags": {
+                "nested_type": {
+                  "attributes": {
+                    "alt_names": {
+                      "type": [
+                        "list",
+                        "string"
+                      ],
+                      "description": "Alternative service names.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "ingress_domain": {
+                      "type": "string",
+                      "description": "Ingress domain for the service.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Service name.",
+                      "description_kind": "markdown",
+                      "required": true
+                    },
+                    "port": {
+                      "type": "number",
+                      "description": "Service port.",
+                      "description_kind": "markdown",
+                      "required": true
+                    },
+                    "priority": {
+                      "type": "number",
+                      "description": "DNS SRV record priority.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "protocol": {
+                      "type": "string",
+                      "description": "Service transport protocol.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "tls": {
+                      "type": "bool",
+                      "description": "Enable TLS for the service.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "ttl": {
+                      "type": "number",
+                      "description": "DNS record TTL in seconds.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    },
+                    "weight": {
+                      "type": "number",
+                      "description": "DNS SRV record weight.",
+                      "description_kind": "markdown",
+                      "optional": true
+                    }
+                  },
+                  "nesting_mode": "list"
+                },
+                "description": "Service definitions for DNS and ingress configuration.",
+                "description_kind": "markdown",
+                "optional": true
+              },
+              "vm_name": {
+                "type": "string",
+                "description": "Unique VM name generated by Kybornos.",
+                "description_kind": "plain",
+                "computed": true
+              }
+            },
+            "description": "Run **OpenBSD** or **Alpine Linux** in a Kybornos virtual machine.",
+            "description_kind": "markdown"
+          }
+        }
+      }
+    }
+  }
+}

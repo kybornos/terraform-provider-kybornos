@@ -12,10 +12,27 @@ provider "kybornos" {
 }
 
 resource "kybornos_vm" "web" {
-  count = 1
+  count    = 2
   hostname = "web${count.index}"
-  size = "small"
-  public = false
+  size     = "small"
+  public   = false
+  autoinstall = {
+    timezone = "Europe/Athens"
+    username = "dave"
+  }
+  srv_tags = [
+    {
+      name           = "http"
+      port           = 80
+      weight         = 10
+      priority       = 10
+      protocol       = "tcp"
+      ttl            = 60
+      tls            = false
+      alt_names      = ["www"]
+      ingress_domain = "example.tld"
+    }
+  ]
 }
 
 output "vm_ids" {
@@ -23,5 +40,5 @@ output "vm_ids" {
 }
 
 output "ip_addresses" {
-    value = kybornos_vm.web[*].interfaces[*].ip4
+  value = kybornos_vm.web[*].interfaces[*].ip4
 }

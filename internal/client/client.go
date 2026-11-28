@@ -20,12 +20,14 @@ type Client struct {
 }
 
 type VM struct {
-	ID         string `json:"id"`
-	Hostname   string
-	VMName     string `json:"vm_name"`
-	Size       VMSize `json:"size"`
-	Public     bool
-	Interfaces []VMInterface
+	ID               string `json:"id"`
+	Hostname         string
+	VMName           string `json:"vm_name"`
+	Size             VMSize `json:"size"`
+	Public           bool
+	Encrypt          string
+	AutodiskTemplate bool
+	Interfaces       []VMInterface
 }
 
 type VMSize struct {
@@ -135,21 +137,39 @@ func (c *Client) request(ctx context.Context, method, path string, payload any, 
 	}
 	return nil
 }
-func (c *Client) Create(ctx context.Context, hostname, size string, public bool) (VM, error) {
+func (c *Client) Create(ctx context.Context, hostname, size string, public bool, encrypt string, autodisk_template *bool, autoinstall map[string]any, srvTags []map[string]any) (VM, error) {
 	var result DeployResponse
-	if err := c.request(ctx, http.MethodPost, "/v1/vms/deploy", map[string]any{
+
+	payload := map[string]any{
 		"name":   hostname,
 		"size":   size,
 		"public": public,
-	}, &result); err != nil {
+	}
+
+	if len(autoinstall) > 0 {
+		payload["autoinstall"] = autoinstall
+	}
+	if len(encrypt) > 0 {
+		payload["encrypt"] = encrypt
+	}
+	if autodisk_template != nil {
+		payload["autodisk_template"] = *autodisk_template
+	}
+	if srvTags != nil {
+		payload["srv_tags"] = srvTags
+	}
+	if err := c.request(ctx, http.MethodPost, "/v1/vms/deploy", payload, &result); err != nil {
 		return VM{}, err
 	}
+
 	if result.Status != "ok" {
 		return VM{}, fmt.Errorf("deploy returned unexpected status %q", result.Status)
 	}
+
 	if result.Data == "" {
 		return VM{}, errors.New("deploy response missing VM ID in data")
 	}
+
 	return VM{ID: result.Data}, nil
 }
 
